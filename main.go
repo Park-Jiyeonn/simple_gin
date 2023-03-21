@@ -9,6 +9,7 @@ import (
 func main() {
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/hello", func(w http.ResponseWriter, req *http.Request) {
+		fmt.Println("使用了")
 		_, err := fmt.Fprintf(w, "URL = %q", req.URL)
 		if err != nil {
 			fmt.Println(err.Error())
