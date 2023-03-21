@@ -2,25 +2,26 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
+	"simple_gin/gee"
 )
 
-type Engine struct {
+func main() {
+	r := gee.New()
+	r.GET("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "URL是：%q\n", r.URL.Path)
+	})
+	r.GET("/hello", func(w http.ResponseWriter, r *http.Request) {
+		for k, v := range r.Header {
+			fmt.Fprintf(w, "Header[%q] = %q", k, v)
+		}
+	})
+	r.Run(":8081")
 }
 
-// 这里实现了Handler接口
-func (e *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	switch req.URL.Path {
-	case "/":
-		fmt.Fprintf(w, "URL是%q\n", req.URL.Path)
-	case "/hello":
-		fmt.Fprintf(w, "URL是%q\n", req.URL.Path)
-	default:
-		fmt.Fprintf(w, "404 NOT FOUND : %s", req.URL)
-	}
-}
-func main() {
-	engine := new(Engine)
-	log.Fatal(http.ListenAndServe(":8081", engine))
-}
+// git 代理：
+//git config --global http.proxy http://127.0.0.1:1080
+//git config --global https.proxy http://127.0.0.1:1080
+// 取消代理：
+//git config --global --unset http.proxy
+//git config --global --unset https.proxy
