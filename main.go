@@ -6,20 +6,21 @@ import (
 	"net/http"
 )
 
-func main() {
-	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/hello", func(w http.ResponseWriter, req *http.Request) {
-		fmt.Println("使用了")
-		_, err := fmt.Fprintf(w, "URL = %q", req.URL)
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-	})
-	log.Fatal(http.ListenAndServe(":8081", nil))
+type Engine struct {
 }
-func indexHandler(w http.ResponseWriter, req *http.Request) {
-	_, err := fmt.Fprintf(w, "URL = %q", req.URL.Path)
-	if err != nil {
-		fmt.Println(err.Error())
+
+// 这里实现了Handler接口
+func (e *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	switch req.URL.Path {
+	case "/":
+		fmt.Fprintf(w, "URL是%q\n", req.URL.Path)
+	case "/hello":
+		fmt.Fprintf(w, "URL是%q\n", req.URL.Path)
+	default:
+		fmt.Fprintf(w, "404 NOT FOUND : %s", req.URL)
 	}
+}
+func main() {
+	engine := new(Engine)
+	log.Fatal(http.ListenAndServe(":8081", engine))
 }
