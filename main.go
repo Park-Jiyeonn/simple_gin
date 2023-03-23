@@ -19,6 +19,15 @@ func main() {
 			"password": c.PostForm("password"),
 		})
 	})
+
+	r.GET("/hello/:name", func(c *gee.Context) {
+		c.String(http.StatusOK, "hello %s, you are at %s", c.Param("name"), c.Path)
+	})
+	r.GET("/assets/*filepath", func(c *gee.Context) {
+		c.JSON(http.StatusOK, gee.H{
+			"filepath": c.Param("filepath"),
+		})
+	})
 	r.Run(":8081")
 }
 
