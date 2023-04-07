@@ -15,7 +15,9 @@ type Context struct {
 	//需要的信息
 	Path   string
 	Method string
-	f      map[string]string
+
+	// f里面是参数对应的值
+	f map[string]string
 
 	//响应
 	StatusCode int

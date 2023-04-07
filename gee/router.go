@@ -70,7 +70,7 @@ func (r *router) getRoute(method string, path string) (*node, map[string]string)
 func (r *router) handle(c *Context) {
 	x, f := r.getRoute(c.Method, c.Path)
 	if x != nil {
-		c.f = f
+		c.f = f // f里面是参数对应的值
 		key := c.Method + "-" + x.pattern
 		r.handlers[key](c)
 	} else {
