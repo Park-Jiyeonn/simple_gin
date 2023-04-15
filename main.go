@@ -1,18 +1,31 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"simple_gin/gee"
+	"time"
 )
+
+func my_mid() gee.HandleFunc {
+	return func(c *gee.Context) {
+		t := time.Now()
+		c.JSON(200, "success")
+		log.Printf("[%d] %s in %v", c.StatusCode, c.Req.RequestURI, time.Since(t))
+	}
+}
 
 func main() {
 	r := gee.New()
+
+	r.Use(gee.Logger())
 
 	r.GET("/index", func(c *gee.Context) {
 		c.HTML(http.StatusOK, "<h1>Hi, I'm Jiyeon<h1>")
 	})
 
 	v1 := r.Group("/v1")
+	v1.Use(my_mid())
 	{
 		v1.GET("/", func(c *gee.Context) {
 			c.HTML(http.StatusOK, "<h1>Hello Gee<h1>")

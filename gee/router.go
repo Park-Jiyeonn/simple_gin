@@ -67,13 +67,18 @@ func (r *router) getRoute(method string, path string) (*node, map[string]string)
 	}
 	return nil, nil
 }
+
+// 中间件先走，因为中间件先 append 进来了，中间件同意 继续 Next了，才可以走到路由对应的 function
 func (r *router) handle(c *Context) {
 	x, f := r.getRoute(c.Method, c.Path)
 	if x != nil {
 		c.f = f // f里面是参数对应的值
 		key := c.Method + "-" + x.pattern
-		r.handlers[key](c)
+		c.handlers = append(c.handlers, r.handlers[key])
 	} else {
-		c.String(http.StatusNotFound, "404 NOT FOUND %s\n", c.Path)
+		c.handlers = append(c.handlers, func(c *Context) {
+			c.String(http.StatusNotFound, "404 NOT FOUND %s\n", c.Path)
+		})
 	}
+	c.Next()
 }
