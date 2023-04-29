@@ -16,19 +16,22 @@ func my_mid() gee.HandleFunc {
 }
 
 func main() {
-	r := gee.New()
+	r := gee.Default()
 
-	r.Use(gee.Logger())
+	r.GET("/panic", func(c *gee.Context) {
+		a := "make([]int, 10)"
+		c.JSON(200, a[100])
+	})
 
 	r.GET("/index", func(c *gee.Context) {
-		c.HTML(http.StatusOK, "<h1>Hi, I'm Jiyeon<h1>")
+		c.HTML(http.StatusOK, "<h1>Hi, I'm Jiyeon<h1>", nil)
 	})
 
 	v1 := r.Group("/v1")
 	v1.Use(my_mid())
 	{
 		v1.GET("/", func(c *gee.Context) {
-			c.HTML(http.StatusOK, "<h1>Hello Gee<h1>")
+			c.HTML(http.StatusOK, "<h1>Hello Gee<h1>", nil)
 		})
 		v1.GET("/hello", func(c *gee.Context) {
 			c.String(http.StatusOK, "hello %s, there is %s\n", c.Query("name"), c.Path)

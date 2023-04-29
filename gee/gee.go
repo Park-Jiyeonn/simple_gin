@@ -1,7 +1,6 @@
 package gee
 
 import (
-	"fmt"
 	"html/template"
 	"net/http"
 	"path"
@@ -78,7 +77,7 @@ func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		// 如果请求中有这个分组的前缀，那么这个分组的中间件就要加进 Context 的中间件
 		if strings.HasPrefix(req.URL.Path, group.prefix) {
 			midllewares = append(midllewares, group.middlewares...)
-			fmt.Println("It should be here!!!!!!")
+			//fmt.Println("It should be here!!!!!!")
 		}
 	}
 	c := NewContext(w, req)
@@ -124,3 +123,9 @@ func (engine *Engine) LoadHTMLGlob(pattern string) {
 }
 
 // -------------------------------------------------------------------------------------------------------
+
+func Default() *Engine {
+	enging := New()
+	enging.Use(Logger(), Recovery())
+	return enging
+}
