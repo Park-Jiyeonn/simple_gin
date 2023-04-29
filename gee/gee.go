@@ -2,15 +2,19 @@ package gee
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
+	"path"
 	"strings"
 )
 
 // 具体的哈希表，通过路径来映射
 type Engine struct {
-	*RouterGroup // 为了能够访问 Group 的方法，但是 Group 不可以访问 Engine 的方法。
-	router       *router
-	groups       []*RouterGroup // 由 Engine 创建所有的 Group
+	*RouterGroup  // 为了能够访问 Group 的方法，但是 Group 不可以访问 Engine 的方法。
+	router        *router
+	groups        []*RouterGroup     // 由 Engine 创建所有的 Group
+	htmlTemplates *template.Template // 将所有的模板加载进内存
+	funcMap       template.FuncMap   // 所有的自定义模板渲染函数
 }
 
 type RouterGroup struct {
@@ -79,6 +83,44 @@ func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 	c := NewContext(w, req)
 	c.handlers = midllewares
-	//fmt.Println(c.handlers)
+	c.engine = engine
 	engine.router.handle(c)
 }
+
+func (group *RouterGroup) createStaticHandler(relativePath string, fs http.FileSystem) HandleFunc {
+	absolutePath := path.Join(group.prefix, relativePath)
+	// FileServer 会创建一个 http.Handler 的值，用 fs 这个文件系统来提供服务
+	// StripPrefix 将请求中的 url 前缀去掉，从而能够得到文件的路径
+	// 看了看源码，StripPrefix 就是对请求连接进行了一个修改，然后返回 FileServer 的Handler
+	fileServer := http.StripPrefix(absolutePath, http.FileServer(fs))
+	return func(c *Context) {
+		file := c.Param("filepath")
+		if _, err := fs.Open(file); err != nil {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		// 将文件的内容作为 http 相应发送回客户端
+		fileServer.ServeHTTP(c.Writer, c.Req)
+	}
+}
+
+// Template
+// ---------------------------------------------------------------------------------------------------------
+
+// 把 relativePath 映射到 root
+func (group *RouterGroup) Static(relativePath string, root string) {
+	// dir 函数将路径暴露给 web服务器，客户端可以用http协议来访问指定目录下的文件和子目录，返回一个文件系统
+	handler := group.createStaticHandler(relativePath, http.Dir(root))
+	urlPath := path.Join(relativePath, "/*filepath")
+	group.GET(urlPath, handler)
+}
+
+func (engine *Engine) SetFuncMap(funcMap template.FuncMap) {
+	engine.funcMap = funcMap
+}
+
+func (engine *Engine) LoadHTMLGlob(pattern string) {
+	engine.htmlTemplates = template.Must(template.New("").Funcs(engine.funcMap).ParseGlob(pattern))
+}
+
+// -------------------------------------------------------------------------------------------------------
